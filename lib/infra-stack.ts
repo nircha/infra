@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as ecr from 'aws-cdk-lib/aws-ecr';
 
 export class InfraStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -30,14 +31,25 @@ export class InfraStack extends cdk.Stack {
       keyPair: ec2.KeyPair.fromKeyPairName(this, 'MyKeyPair', 'my-key-pair'), // Replace with your key pair name
     });
 
-    // User data to install Docker and run the app
+    // Create ECR Repository
+    const ecrRepo = new ecr.Repository(this, 'TaskManagerRepo', {
+      repositoryName: 'task-manager',
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // Delete on cdk destroy
+    });
+
+    // Update user data to use the ECR image
     instance.addUserData(
       'yum update -y',
       'amazon-linux-extras install docker -y',
       'service docker start',
       'usermod -a -G docker ec2-user',
-      'docker run -d -p 3000:3000 your-docker-image' // Replace with your Docker image
+      `docker run -d -p 3000:3000 ${ecrRepo.repositoryUri}:latest`
     );
+
+    // Output the ECR repository URI
+    new cdk.CfnOutput(this, 'ECRRepositoryUri', {
+      value: ecrRepo.repositoryUri,
+    });
 
     // Output the instance public IP
     new cdk.CfnOutput(this, 'InstancePublicIp', {

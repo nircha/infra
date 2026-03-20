@@ -28,7 +28,8 @@ export class InfraStack extends cdk.Stack {
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
       machineImage: ec2.MachineImage.latestAmazonLinux2(),
       securityGroup,
-      keyPair: ec2.KeyPair.fromKeyPairName(this, 'MyKeyPair', 'my-key-pair'), // Replace with your key pair name
+      keyPair: ec2.KeyPair.fromKeyPairName(this, 'MyKeyPair', 'task-manager-key'),
+      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
     });
 
     // Create ECR Repository
